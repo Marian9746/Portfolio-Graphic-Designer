@@ -1,0 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap');
+
+body { margin: 0; }
+deck-stage:not(:defined) { visibility: hidden; }
+
+.om-rule { height: 2px; background: rgba(32,30,29,0.4); }
+a { color: #ec3013; text-decoration: none; }
+a:hover { color: #ffe0d9; }
