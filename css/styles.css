@@ -8,18 +8,59 @@ a { color: #ec3013; text-decoration: none; }
 a:hover { color: #ffe0d9; }
 
 /* ============================================================
-   Slide 8 (How We Work Together) — the 5 steps reveal one after another
-   in order (01 -> 02 -> 03 -> 04 -> 05) whenever the slide becomes
-   active, desktop and mobile alike. The visible end-state is the base
-   style (no unconditional opacity:0) so print/export — which stamps
-   data-deck-active on every slide at once, outside a live timeline —
-   still renders the finished, fully-visible layout; the animation only
-   engages under [data-deck-active] + prefers-reduced-motion:no-preference,
-   per deck-stage's own authoring guidance for entrance animations. */
+   Sequential entrance reveal — on several slides, the items that make up
+   the slide's main list/grid fade + rise into place one after another
+   instead of appearing all at once, desktop and mobile alike. The
+   visible end-state is the base style (no unconditional opacity:0) so
+   print/export — which stamps data-deck-active on every slide at once,
+   outside a live timeline — still renders the finished, fully-visible
+   layout; the animation only engages under [data-deck-active] +
+   prefers-reduced-motion:no-preference, per deck-stage's own authoring
+   guidance for entrance animations. */
 @media (prefers-reduced-motion: no-preference) {
-  section[data-label="How We Work Together"][data-deck-active] .collab-row > * {
-    animation: collab-reveal 620ms cubic-bezier(.2,.8,.2,1) both;
+  section[data-label="About Me"][data-deck-active] .about-grid > div,
+  section[data-label="The Problem"][data-deck-active] .chip-row > .chip,
+  section[data-label="What I Do"][data-deck-active] .grid-2x2 > div,
+  section[data-label="Process Part 1"][data-deck-active] .step-row,
+  section[data-label="Process Part 2"][data-deck-active] .step-row,
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *,
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div,
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > * {
+    animation: stagger-reveal 620ms cubic-bezier(.2,.8,.2,1) both;
   }
+
+  /* About Me — 01 Design / 02 Technology / 03 Digital Experiences */
+  section[data-label="About Me"][data-deck-active] .about-grid > div:nth-child(1) { animation-delay: 100ms; }
+  section[data-label="About Me"][data-deck-active] .about-grid > div:nth-child(2) { animation-delay: 220ms; }
+  section[data-label="About Me"][data-deck-active] .about-grid > div:nth-child(3) { animation-delay: 340ms; }
+
+  /* The Problem — 5 chips */
+  section[data-label="The Problem"][data-deck-active] .chip-row > .chip:nth-child(1) { animation-delay: 100ms; }
+  section[data-label="The Problem"][data-deck-active] .chip-row > .chip:nth-child(2) { animation-delay: 200ms; }
+  section[data-label="The Problem"][data-deck-active] .chip-row > .chip:nth-child(3) { animation-delay: 300ms; }
+  section[data-label="The Problem"][data-deck-active] .chip-row > .chip:nth-child(4) { animation-delay: 400ms; }
+  section[data-label="The Problem"][data-deck-active] .chip-row > .chip:nth-child(5) { animation-delay: 500ms; }
+
+  /* What I Do — 4 services */
+  section[data-label="What I Do"][data-deck-active] .grid-2x2 > div:nth-child(1) { animation-delay: 100ms; }
+  section[data-label="What I Do"][data-deck-active] .grid-2x2 > div:nth-child(2) { animation-delay: 220ms; }
+  section[data-label="What I Do"][data-deck-active] .grid-2x2 > div:nth-child(3) { animation-delay: 340ms; }
+  section[data-label="What I Do"][data-deck-active] .grid-2x2 > div:nth-child(4) { animation-delay: 460ms; }
+
+  /* Process Part 1 — steps 01-05 */
+  section[data-label="Process Part 1"][data-deck-active] .step-row:nth-child(1) { animation-delay: 100ms; }
+  section[data-label="Process Part 1"][data-deck-active] .step-row:nth-child(2) { animation-delay: 220ms; }
+  section[data-label="Process Part 1"][data-deck-active] .step-row:nth-child(3) { animation-delay: 340ms; }
+  section[data-label="Process Part 1"][data-deck-active] .step-row:nth-child(4) { animation-delay: 460ms; }
+  section[data-label="Process Part 1"][data-deck-active] .step-row:nth-child(5) { animation-delay: 580ms; }
+
+  /* Process Part 2 — steps 06-09 */
+  section[data-label="Process Part 2"][data-deck-active] .step-row:nth-child(1) { animation-delay: 100ms; }
+  section[data-label="Process Part 2"][data-deck-active] .step-row:nth-child(2) { animation-delay: 220ms; }
+  section[data-label="Process Part 2"][data-deck-active] .step-row:nth-child(3) { animation-delay: 340ms; }
+  section[data-label="Process Part 2"][data-deck-active] .step-row:nth-child(4) { animation-delay: 460ms; }
+
+  /* How We Work Together — 01-05 + connecting arrows */
   section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(1) { animation-delay: 100ms; }
   section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(2) { animation-delay: 220ms; }
   section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(3) { animation-delay: 340ms; }
@@ -29,8 +70,31 @@ a:hover { color: #ffe0d9; }
   section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(7) { animation-delay: 820ms; }
   section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(8) { animation-delay: 940ms; }
   section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(9) { animation-delay: 1060ms; }
+
+  /* What You Get — every deliverable card (plus the trailing filler cell) */
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(1) { animation-delay: 80ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(2) { animation-delay: 160ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(3) { animation-delay: 240ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(4) { animation-delay: 320ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(5) { animation-delay: 400ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(6) { animation-delay: 480ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(7) { animation-delay: 560ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(8) { animation-delay: 640ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(9) { animation-delay: 720ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(10) { animation-delay: 800ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(11) { animation-delay: 880ms; }
+  section[data-label="What You Get"][data-deck-active] .grid-4col > div:nth-child(12) { animation-delay: 960ms; }
+
+  /* Why Work With Me — CREATIVE THINKING + DESIGN + TECHNOLOGY + ENGINEERING */
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > *:nth-child(1) { animation-delay: 100ms; }
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > *:nth-child(2) { animation-delay: 220ms; }
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > *:nth-child(3) { animation-delay: 340ms; }
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > *:nth-child(4) { animation-delay: 460ms; }
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > *:nth-child(5) { animation-delay: 580ms; }
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > *:nth-child(6) { animation-delay: 700ms; }
+  section[data-label="Why Work With Me"][data-deck-active] .why-row > *:nth-child(7) { animation-delay: 820ms; }
 }
-@keyframes collab-reveal {
+@keyframes stagger-reveal {
   from { opacity: 0; transform: translateY(24px) scale(0.9); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
