@@ -136,6 +136,13 @@
   const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
   const FINE_POINTER_MQ = matchMedia('(hover: hover) and (pointer: fine)');
   const NARROW_MQ = matchMedia('(max-width: 640px)');
+  // Portrait phones/tablets, plus short-height landscape phones — the
+  // range where scaling the fixed 1920x1080 canvas to fit both dimensions
+  // letterboxes so hard the slide becomes unreadable (a tall, narrow
+  // viewport against a 16:9 design is the worst case — width-constrained
+  // scaling leaves huge top/bottom bars). _fit() switches these to an
+  // unscaled, viewport-sized canvas instead (see data-deck-mobile).
+  const MOBILE_MQ = matchMedia('(max-width: 767px), (max-height: 480px) and (orientation: landscape), (max-width: 1024px) and (orientation: portrait)');
   // Slide-authored controls that should keep a tap instead of it navigating.
   const INTERACTIVE_SEL = 'a[href], button, input, select, textarea, summary, label, video[controls], audio[controls], [role="button"], [onclick], [tabindex]:not([tabindex^="-"]), [contenteditable]:not([contenteditable="false" i])';
 
@@ -216,6 +223,16 @@
       opacity: 1;
       pointer-events: auto;
       visibility: visible;
+    }
+
+    /* Mobile canvas mode (see _fit): the canvas is sized to the real
+       viewport instead of being scaled, so slide content can reflow via
+       the page's own stylesheet (slides live in light DOM). Vertical
+       scroll is allowed only here, and only if a reflowed slide still
+       doesn't fit. */
+    :host([data-deck-mobile]) ::slotted(*) {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .overlay {
@@ -358,6 +375,19 @@
     .rail[data-presenting] { display: none; }
     @media (max-width: 640px) {
       .rail, .rail-resize { display: none; }
+    }
+    /* Mirrors MOBILE_MQ in JS — the rail has no room once the canvas
+       drops out of scaled letterbox mode into a full-viewport mobile
+       layout. */
+    @media (max-width: 767px), (max-height: 480px) and (orientation: landscape), (max-width: 1024px) and (orientation: portrait) {
+      .rail, .rail-resize { display: none; }
+    }
+    /* Larger tap targets for the prev/next/reset controls on phones —
+       28px hits are cramped under WCAG/Apple touch-target guidance. */
+    @media (max-width: 767px), (max-height: 480px) and (orientation: landscape), (max-width: 1024px) and (orientation: portrait) {
+      .btn { height: 40px; min-width: 40px; }
+      .btn svg { width: 18px; height: 18px; }
+      .overlay { bottom: max(14px, env(safe-area-inset-bottom)); padding: 6px; }
     }
     /* User-driven show/hide (the TweaksPanel toggle) slides instead of
        popping. Transitions are gated on :host([data-rail-anim]) — set only
@@ -718,6 +748,23 @@
       window.addEventListener('message', this._onMessage);
       window.addEventListener('click', this._onDocClick, true);
       this.addEventListener('click', this._onTap);
+      // Mobile browsers resize the visual viewport (address bar show/hide)
+      // without always firing window 'resize' — track it directly so the
+      // full-bleed mobile canvas (see _fit/data-deck-mobile) doesn't leave
+      // a gap or clip when the chrome animates in/out.
+      if (window.visualViewport) {
+        this._onVisualViewportResize = () => {
+          this._visualViewportSize = { w: window.visualViewport.width, h: window.visualViewport.height };
+          this._fit();
+        };
+        window.visualViewport.addEventListener('resize', this._onVisualViewportResize);
+      }
+      // A MediaQueryList doesn't itself trigger layout — this just keeps
+      // data-deck-mobile in sync on engines where crossing the query
+      // wouldn't otherwise coincide with a window 'resize' (e.g. some
+      // devtools device-toolbar toggles).
+      this._onMobileMqChange = () => this._fit();
+      MOBILE_MQ.addEventListener('change', this._onMobileMqChange);
       // Print lays every slide out as its own page, so [data-deck-active]-
       // gated entrance styles need the attribute on every slide (not just
       // the current one) or their content prints at the hidden base style.
@@ -1047,6 +1094,10 @@
       window.removeEventListener('click', this._onDocClick, true);
       window.removeEventListener('beforeprint', this._onBeforePrint);
       window.removeEventListener('afterprint', this._onAfterPrint);
+      if (window.visualViewport && this._onVisualViewportResize) {
+        window.visualViewport.removeEventListener('resize', this._onVisualViewportResize);
+      }
+      if (this._onMobileMqChange) MOBILE_MQ.removeEventListener('change', this._onMobileMqChange);
       if (this._freezeStyle) { this._freezeStyle.remove(); this._freezeStyle = null; }
       this.removeEventListener('click', this._onTap);
       if (this._hideTimer) clearTimeout(this._hideTimer);
@@ -1573,7 +1624,7 @@
       // corrects it.
       if (!this._railEnabled || !this._railVisible || this.hasAttribute('no-rail')
           || this.hasAttribute('noscale') || this._presenting || this._previewMode
-          || NARROW_MQ.matches) return 0;
+          || NARROW_MQ.matches || MOBILE_MQ.matches) return 0;
       return this._railPx || 0;
     }
 
@@ -1589,14 +1640,28 @@
         if (this._overlay) this._overlay.style.marginLeft = '0';
         return;
       }
+      const mobile = MOBILE_MQ.matches;
+      this.toggleAttribute('data-deck-mobile', mobile);
       const rw = this._railWidth();
       if (stage) stage.style.left = rw + 'px';
       // Overlay is centred on the viewport via left:50% + translate(-50%);
       // marginLeft shifts the centre by rw/2 so it lands in the middle of
       // the [rw, innerWidth] stage region.
       if (this._overlay) this._overlay.style.marginLeft = (rw / 2) + 'px';
-      const vw = window.innerWidth - rw;
-      const vh = window.innerHeight;
+      const vw = (this._visualViewportSize ? this._visualViewportSize.w : window.innerWidth) - rw;
+      const vh = this._visualViewportSize ? this._visualViewportSize.h : window.innerHeight;
+      if (mobile) {
+        // No letterboxing: the canvas IS the viewport, at its real pixel
+        // size, so authored CSS (slides live in light DOM) can reflow the
+        // 1920x1080-authored content to fit a vertical phone screen
+        // instead of shrinking it into a tiny centred rectangle.
+        this._canvas.style.transform = 'none';
+        this._canvas.style.width = vw + 'px';
+        this._canvas.style.height = vh + 'px';
+        return;
+      }
+      this._canvas.style.width = this.designWidth + 'px';
+      this._canvas.style.height = this.designHeight + 'px';
       const s = Math.min(vw / this.designWidth, vh / this.designHeight);
       this._canvas.style.transform = `scale(${s})`;
     }
