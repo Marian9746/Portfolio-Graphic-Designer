@@ -8,6 +8,34 @@ a { color: #ec3013; text-decoration: none; }
 a:hover { color: #ffe0d9; }
 
 /* ============================================================
+   Slide 8 (How We Work Together) — the 5 steps reveal one after another
+   in order (01 -> 02 -> 03 -> 04 -> 05) whenever the slide becomes
+   active, desktop and mobile alike. The visible end-state is the base
+   style (no unconditional opacity:0) so print/export — which stamps
+   data-deck-active on every slide at once, outside a live timeline —
+   still renders the finished, fully-visible layout; the animation only
+   engages under [data-deck-active] + prefers-reduced-motion:no-preference,
+   per deck-stage's own authoring guidance for entrance animations. */
+@media (prefers-reduced-motion: no-preference) {
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > * {
+    animation: collab-reveal 620ms cubic-bezier(.2,.8,.2,1) both;
+  }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(1) { animation-delay: 100ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(2) { animation-delay: 220ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(3) { animation-delay: 340ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(4) { animation-delay: 460ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(5) { animation-delay: 580ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(6) { animation-delay: 700ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(7) { animation-delay: 820ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(8) { animation-delay: 940ms; }
+  section[data-label="How We Work Together"][data-deck-active] .collab-row > *:nth-child(9) { animation-delay: 1060ms; }
+}
+@keyframes collab-reveal {
+  from { opacity: 0; transform: translateY(24px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================================
    MOBILE RESPONSIVE — reflow for portrait phones / short landscape phones.
    deck-stage[data-deck-mobile] is set by js/deck-stage.js's _fit() exactly
    when it switches the canvas out of scaled 16:9 letterboxing into a
@@ -57,11 +85,20 @@ a:hover { color: #ffe0d9; }
     grid-template-columns: 1fr !important;
   }
   deck-stage[data-deck-mobile] .grid-2x2 { grid-template-rows: none !important; }
-  deck-stage[data-deck-mobile] .grid-3col > div,
-  deck-stage[data-deck-mobile] .grid-4col > div {
+  deck-stage[data-deck-mobile] .grid-3col > div {
     border-right: none !important;
   }
+  /* Deliverables: each item becomes its own fully-bordered card instead
+     of a table row with only some edges drawn. */
+  deck-stage[data-deck-mobile] .grid-4col {
+    border-top: none !important;
+    border-left: none !important;
+    background: transparent !important;
+    gap: 12px !important;
+  }
   deck-stage[data-deck-mobile] .grid-4col > div {
+    border: 2px solid rgba(32,30,29,0.25) !important;
+    border-radius: 10px !important;
     font-size: 18px !important;
     padding: 18px 20px !important;
   }
@@ -94,24 +131,40 @@ a:hover { color: #ffe0d9; }
      canvas) rejoins normal flow and is reordered above the info grid;
      its layout-reservation spacer is no longer needed. */
   deck-stage[data-deck-mobile] .about-spacer { display: none !important; }
+  deck-stage[data-deck-mobile] .slide-about p {
+    font-size: clamp(14px, 4vw, 16px) !important;
+  }
+  /* The photo must show in full — sized to its own aspect ratio (960x820)
+     instead of a fixed crop box, with object-fit:contain as a safety net
+     against any rounding. Text and the 3-column steps below are trimmed
+     (smaller type, tighter padding) to make room. */
   deck-stage[data-deck-mobile] .about-photo {
     position: relative !important;
     left: auto !important;
     top: auto !important;
     width: 100% !important;
-    height: 240px !important;
+    height: auto !important;
+    aspect-ratio: 960 / 820 !important;
     order: 2;
     margin: 4px 0 4px !important;
   }
   deck-stage[data-deck-mobile] .about-photo-img {
     left: 0 !important;
     top: 0 !important;
+    object-fit: contain !important;
   }
   deck-stage[data-deck-mobile] .slide-about > .om-rule { order: 1; }
   deck-stage[data-deck-mobile] .about-grid { order: 3; }
   deck-stage[data-deck-mobile] .about-grid > div {
-    padding: 20px 0 !important;
+    padding: 12px 0 !important;
     border-bottom: 1px solid rgba(32,30,29,0.25);
+  }
+  deck-stage[data-deck-mobile] .about-grid > div > div:nth-child(2) {
+    font-size: 20px !important;
+    margin-bottom: 4px !important;
+  }
+  deck-stage[data-deck-mobile] .about-grid > div > div:nth-child(3) {
+    font-size: 14px !important;
   }
 
   /* The Problem: chip row shrinks so 5 chips wrap comfortably. */
@@ -153,12 +206,37 @@ a:hover { color: #ffe0d9; }
   deck-stage[data-deck-mobile] .why-row { gap: 10px !important; margin-bottom: 28px !important; }
   deck-stage[data-deck-mobile] .why-word { font-size: clamp(20px, 6.5vw, 26px) !important; }
   deck-stage[data-deck-mobile] .why-plus { font-size: 20px !important; }
+  /* The closing quote shrinks and sits left-aligned right after the
+     divider, instead of running the full authored width at 26px. */
+  deck-stage[data-deck-mobile] .why-quote {
+    font-size: clamp(14px, 4vw, 17px) !important;
+    text-align: left !important;
+    max-width: 100% !important;
+    margin: 20px 0 0 !important;
+  }
 
   /* Built for Local Businesses: word sizes keep their relative hierarchy
      but scale down together so the wrap stays tidy. */
   deck-stage[data-deck-mobile] .tagword-lg { font-size: clamp(26px, 8vw, 34px) !important; }
   deck-stage[data-deck-mobile] .tagword-md { font-size: clamp(22px, 6.5vw, 28px) !important; }
   deck-stage[data-deck-mobile] .tagword-sm { font-size: clamp(18px, 5vw, 22px) !important; }
+
+  /* Packages: the desktop grid separates cards with 2px hairlines over a
+     shared background — on a single column that reads as one slab with
+     faint lines, not 3 choices. Give each card real breathing room and a
+     full border so Starter / Standard / Custom are clearly distinct. */
+  deck-stage[data-deck-mobile] section[data-label="Packages"] .grid-3col {
+    gap: 18px !important;
+    background: transparent !important;
+  }
+  deck-stage[data-deck-mobile] section[data-label="Packages"] .grid-3col > div {
+    border: 2px solid rgba(32,30,29,0.2) !important;
+    border-radius: 10px !important;
+    padding: 24px !important;
+  }
+  deck-stage[data-deck-mobile] section[data-label="Packages"] .grid-3col > div:nth-child(2) {
+    border-top: 4px solid #ec3013 !important;
+  }
 
   /* Final CTA: footer stacks so long contact links have room. */
   deck-stage[data-deck-mobile] .cta-footer-row {
@@ -169,5 +247,43 @@ a:hover { color: #ffe0d9; }
   deck-stage[data-deck-mobile] .cta-contacts {
     text-align: left !important;
     align-items: flex-start !important;
+  }
+  /* Everything from the name down (name, role, contact links) centers in
+     the leftover space below the headline, instead of sitting pinned to
+     the bottom edge. */
+  deck-stage[data-deck-mobile] section[data-label="Final CTA"] {
+    justify-content: flex-start !important;
+  }
+  deck-stage[data-deck-mobile] .cta-footer-wrap {
+    flex: 1;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  /* Subtle slide-to-slide transition. deck-stage's shadow stylesheet
+     toggles opacity/visibility on [data-deck-active] instantly; adding a
+     transition here (author CSS reaches slotted slides directly) turns
+     that into a gentle cross-fade + rise, mobile only. The visibility
+     delay is asymmetric on purpose: the incoming slide must be visible
+     immediately so the fade-in is seen, while the outgoing slide should
+     only leave the visible layer after it has fully faded. */
+  deck-stage[data-deck-mobile] section {
+    transition: opacity 480ms cubic-bezier(.3,.7,.4,1),
+                transform 480ms cubic-bezier(.3,.7,.4,1),
+                visibility 0s linear 480ms !important;
+    transform: translateY(14px) !important;
+  }
+  deck-stage[data-deck-mobile] section[data-deck-active] {
+    transition: opacity 480ms cubic-bezier(.3,.7,.4,1),
+                transform 480ms cubic-bezier(.3,.7,.4,1),
+                visibility 0s linear 0s !important;
+    transform: translateY(0) !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    deck-stage[data-deck-mobile] section {
+      transition: none !important;
+      transform: none !important;
+    }
   }
 }
