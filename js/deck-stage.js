@@ -333,6 +333,61 @@
       margin: 0 2px;
     }
 
+    /* ── Mobile corner nav hints ─────────────────────────────────────────
+       A bigger, more obvious "tap here to go forward/back" affordance
+       than the small overlay pill — only shown once _fit() switches the
+       canvas into the unscaled mobile layout (data-deck-mobile). Fixed
+       to the true viewport (mobile mode never applies a canvas transform,
+       so position:fixed lands correctly), sitting above the overlay pill,
+       one per bottom corner. Hidden at the first/last slide to match
+       _advance()'s own clamp-at-ends behaviour. */
+    .nav-hint {
+      display: none;
+      position: fixed;
+      bottom: 84px;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      /* A light, near-white badge behind the red icon — decks in this
+       * project alternate between light and brand-red slide backgrounds,
+       * and a bare red-on-red icon disappears on the red ones. The badge
+       * reads as a soft, barely-there disc on light slides (icon still
+       * pops via contrast) and as a clear card on red ones. */
+      background: rgba(243,242,242,0.92);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+      color: #ec3013;
+      cursor: default;
+      -webkit-tap-highlight-color: transparent;
+      z-index: 2147482900;
+    }
+    .nav-hint svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+    .nav-hint--prev { left: 14px; }
+    .nav-hint--next { right: 14px; }
+    :host([data-deck-mobile]) .nav-hint { display: flex; }
+    .nav-hint.is-hidden,
+    :host([noscale]) .nav-hint,
+    .nav-hint[data-presenting] { display: none !important; }
+    @media (prefers-reduced-motion: no-preference) {
+      .nav-hint--next { animation: nav-hint-pulse-right 1.8s ease-in-out infinite; }
+      .nav-hint--prev { animation: nav-hint-pulse-left 1.8s ease-in-out infinite; }
+    }
+    @keyframes nav-hint-pulse-right {
+      0%, 100% { opacity: 0.5; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(4px); }
+    }
+    @keyframes nav-hint-pulse-left {
+      0%, 100% { opacity: 0.5; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(-4px); }
+    }
+
     /* ── Thumbnail rail ──────────────────────────────────────────────────
        Fixed column on the left; each thumbnail is a static deep-clone of
        the light-DOM slide scaled into a 16:9 (or design-aspect) frame. The
@@ -1338,7 +1393,25 @@
         this._focusCurrentThumb();
       });
 
-      this._root.append(style, rail, resize, stage, overlay, menu, confirm);
+      // Mobile corner nav hints — plain buttons calling the same
+      // _advance() the overlay's prev/next controls use.
+      const navPrev = document.createElement('button');
+      navPrev.type = 'button';
+      navPrev.className = 'nav-hint nav-hint--prev export-hidden';
+      navPrev.setAttribute('aria-label', 'Previous slide');
+      navPrev.setAttribute('data-omelette-chrome', '');
+      navPrev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+      navPrev.addEventListener('click', () => this._advance(-1, 'click'));
+
+      const navNext = document.createElement('button');
+      navNext.type = 'button';
+      navNext.className = 'nav-hint nav-hint--next export-hidden';
+      navNext.setAttribute('aria-label', 'Next slide');
+      navNext.setAttribute('data-omelette-chrome', '');
+      navNext.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+      navNext.addEventListener('click', () => this._advance(1, 'click'));
+
+      this._root.append(style, rail, resize, stage, overlay, menu, confirm, navPrev, navNext);
       this._canvas = canvas;
       this._stage = stage;
       this._slot = slot;
@@ -1347,6 +1420,8 @@
       this._resize = resize;
       this._menu = menu;
       this._confirm = confirm;
+      this._navPrev = navPrev;
+      this._navNext = navNext;
       this._countEl = overlay.querySelector('.current');
       this._totalEl = overlay.querySelector('.total');
 
@@ -1561,6 +1636,8 @@
         else s.removeAttribute('data-deck-active');
       });
       this._syncCount();
+      if (this._navPrev) this._navPrev.classList.toggle('is-hidden', curr === 0);
+      if (this._navNext) this._navNext.classList.toggle('is-hidden', curr === this._slides.length - 1);
       // Follow-scroll on every navigation (init deep-link, keyboard, click,
       // tap, external goTo) — the only time we *don't* want the rail to
       // track current is after a rail-internal mutation, where _renderRail
