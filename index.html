@@ -34,7 +34,7 @@
 <section class="slide-about" data-label="About Me" data-screen-label="02" data-speaker-notes="Frame the identity through three concepts, not a bio." style="background:#f3f2f2;padding:100px;box-sizing:border-box;display:flex;flex-direction:column;font-family:'Archivo',system-ui,sans-serif;color:#201e1d;">
   <div style="font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#ae1800;margin-bottom:20px;">About</div>
 
-  <h2 style="font-family: 'Archivo'; font-weight: 800; font-size: 68px; line-height: 1.05; margin: 0 0 32px; width: 1110px; height: 74px">Hi, I'm Marian Díaz Romero.</h2><p style="font-size:27px;line-height:1.5;color:#201e1d;max-width:900px;margin:0 0 auto;">I'm a Graphic Designer and Engineer working at the intersection of design, technology and digital experiences. I combine creative thinking with technical knowledge to help ideas become real digital products.</p>
+  <h2 class="tw-heading" style="font-family: 'Archivo'; font-weight: 800; font-size: 68px; line-height: 1.05; margin: 0 0 32px; width: 1110px; height: 74px">Hi, I'm Marian Díaz Romero.</h2><p style="font-size:27px;line-height:1.5;color:#201e1d;max-width:900px;margin:0 0 auto;">I'm a Graphic Designer and Engineer working at the intersection of design, technology and digital experiences. I combine creative thinking with technical knowledge to help ideas become real digital products.</p>
 
   <div class="about-spacer" style="flex: 1; width: 520px; height: 451px"></div><div class="om-rule" style="margin-bottom:0;"></div>
   <div class="grid-3col about-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;">
@@ -331,7 +331,7 @@
 
 <section data-label="Built for Local Businesses" data-screen-label="14" data-speaker-notes="Keep this light and playful — the closing setup before the CTA." style="background:#f3f2f2;padding:100px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;font-family:'Archivo',system-ui,sans-serif;color:#201e1d;">
   <div style="font-family:'Archivo';font-weight:800;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#ae1800;margin-bottom:20px;">Who I Work With</div>
-  <h2 style="font-family:'Archivo';font-weight:800;font-size:64px;line-height:1.05;margin:0 0 56px;">Built for local businesses.</h2>
+  <h2 class="tw-heading" style="font-family:'Archivo';font-weight:800;font-size:64px;line-height:1.05;margin:0 0 56px;">Built for local businesses.</h2>
   <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:baseline;max-width:1500px;">
     <div class="tagword-lg" style="font-family:'Archivo';font-weight:800;font-size:56px;">Cafés</div>
     <div class="tagword-sm" style="font-family:'Archivo';font-weight:800;font-size:34px;color:#ae1800;">Restaurants</div>
@@ -345,7 +345,7 @@
 
 <section data-label="Final CTA" data-screen-label="15" data-speaker-notes="Close warm and direct — invite them to reach out." style="background:#ec3013;padding:100px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;font-family:'Archivo',system-ui,sans-serif;color:#f3f2f2;">
   <div>
-    <h2 style="font-family:'Archivo';font-weight:800;font-size:80px;line-height:1.06;margin:0;max-width:1300px;">Your business already has a story.<br>Let's give it a digital home.</h2>
+    <h2 class="tw-heading" style="font-family:'Archivo';font-weight:800;font-size:80px;line-height:1.06;margin:0;max-width:1300px;">Your business already has a story.<br>Let's give it a digital home.</h2>
   </div>
   <div class="cta-footer-wrap">
     <div style="height:2px;background:rgba(243,242,242,0.4);margin-bottom:32px;"></div>
@@ -365,5 +365,95 @@
 </section>
 </deck-stage>
 <script src="js/deck-stage.js"></script>
+<script>
+/* Typewriter reveal for the two closing headlines (.tw-heading — "Built
+ * for local businesses." and the Final CTA line). Runs on 'slidechange'
+ * (dispatched by deck-stage on every navigation, bubbles to document) so
+ * it replays each time either slide becomes active, desktop and mobile
+ * alike. The heading's authored text is the resting state: it is only
+ * cleared and retyped reactively, so a slide that's never been visited —
+ * including at print/export time, which stamps every slide active in one
+ * synchronous pass rather than dispatching slidechange — still shows the
+ * full, correct text. prefers-reduced-motion skips the animation and
+ * restores the full text immediately.
+ */
+(() => {
+  const CHAR_MS = 34;
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const originals = new WeakMap();
+
+  const captureTextNodes = (el) => {
+    let parts = originals.get(el);
+    if (parts) return parts;
+    parts = [];
+    el.childNodes.forEach((n) => {
+      if (n.nodeType === Node.TEXT_NODE) parts.push({ node: n, text: n.textContent });
+    });
+    originals.set(el, parts);
+    return parts;
+  };
+
+  const getCaret = (el) => {
+    if (!el._twCaret) {
+      el._twCaret = document.createElement('span');
+      el._twCaret.className = 'tw-caret';
+    }
+    return el._twCaret;
+  };
+
+  const typeInto = (el, onDone) => {
+    const parts = captureTextNodes(el);
+    if (!parts.length) { if (onDone) onDone(); return; }
+
+    if (el._twTimer) { clearInterval(el._twTimer); el._twTimer = null; }
+    const caret = getCaret(el);
+    if (caret.parentNode) caret.parentNode.removeChild(caret);
+
+    if (reduceMotion.matches) {
+      parts.forEach((p) => { p.node.textContent = p.text; });
+      if (onDone) onDone();
+      return;
+    }
+
+    parts.forEach((p) => { p.node.textContent = ''; });
+    const queue = [];
+    parts.forEach((p, pi) => {
+      for (let i = 0; i < p.text.length; i++) queue.push(pi);
+    });
+
+    let i = 0;
+    el._twTimer = setInterval(() => {
+      if (i >= queue.length) {
+        clearInterval(el._twTimer);
+        el._twTimer = null;
+        if (caret.parentNode) caret.parentNode.removeChild(caret);
+        if (onDone) onDone();
+        return;
+      }
+      const pi = queue[i];
+      const part = parts[pi];
+      part.node.textContent += part.text[part.node.textContent.length];
+      part.node.parentNode.insertBefore(caret, part.node.nextSibling);
+      i++;
+    }, CHAR_MS);
+  };
+
+  // Multiple .tw-heading elements on the same slide (e.g. a heading
+  // followed by an intro paragraph) type one after another rather than
+  // all at once, like someone typing line by line.
+  const typeSequence = (els, i) => {
+    i = i || 0;
+    if (i >= els.length) return;
+    const next = () => typeSequence(els, i + 1);
+    typeInto(els[i], reduceMotion.matches ? next : () => setTimeout(next, 200));
+  };
+
+  document.addEventListener('slidechange', (e) => {
+    const slide = e.detail && e.detail.slide;
+    if (!slide) return;
+    typeSequence(Array.from(slide.querySelectorAll('.tw-heading')));
+  });
+})();
+</script>
 </body>
 </html>

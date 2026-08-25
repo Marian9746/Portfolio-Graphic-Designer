@@ -99,6 +99,22 @@ a:hover { color: #ffe0d9; }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Typewriter caret — inserted/moved by the inline script at the end of
+   index.html right after the character currently being typed. */
+.tw-caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.86em;
+  background: currentColor;
+  margin-left: 2px;
+  vertical-align: -0.08em;
+  animation: tw-blink 0.85s steps(1, jump-none) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tw-caret { display: none; }
+}
+@keyframes tw-blink { 50% { opacity: 0; } }
+
 /* ============================================================
    MOBILE RESPONSIVE — reflow for portrait phones / short landscape phones.
    deck-stage[data-deck-mobile] is set by js/deck-stage.js's _fit() exactly
